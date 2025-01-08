@@ -302,8 +302,8 @@ class FastifyOtelInstrumentation extends InstrumentationBase {
             [ATTRIBUTE_NAMES.HOOK_NAME]: `${this.pluginName} - not-found-handler`,
             [ATTRIBUTE_NAMES.FASTIFY_TYPE]: HOOK_TYPES.INSTANCE,
             [ATTRIBUTE_NAMES.HOOK_CALLBACK_NAME]:
-              hooks.name?.length > 0
-                ? hooks.name
+              handler.name?.length > 0
+                ? handler.name
                 : ANONYMOUS_FUNCTION_NAME /* c8 ignore next */
           })
           setNotFoundHandlerOriginal(hooks, handler)
@@ -325,7 +325,7 @@ class FastifyOtelInstrumentation extends InstrumentationBase {
             `handler - ${
               handler.name?.length > 0
                 ? handler.name
-                : this.pluginName ??
+                : this.pluginName ?? /* c8 ignore next */
                   ANONYMOUS_FUNCTION_NAME /* c8 ignore next */
             }`,
             {
