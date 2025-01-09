@@ -39,6 +39,7 @@ describe('Interface', () => {
       Object.getPrototypeOf(FastifyInstrumentation),
       InstrumentationBase
     )
+    t.assert.strictEqual(new FastifyInstrumentation({ servername: 'test' }).servername, 'test')
   })
 
   test('FastifyInstrumentation#plugin should return a valid Fastify Plugin', async t => {
@@ -317,7 +318,7 @@ describe('FastifyInstrumentation', () => {
         }
       )
 
-      app.addHook('preValidation', function (request, reply, done) {
+      app.addHook('preValidation', function preValidation (request, reply, done) {
         done()
       })
 
@@ -365,7 +366,7 @@ describe('FastifyInstrumentation', () => {
       })
       t.assert.deepStrictEqual(preValidation.attributes, {
         'fastify.type': 'hook',
-        'hook.callback.name': 'anonymous',
+        'hook.callback.name': 'preValidation',
         'service.name': 'fastify',
         'hook.name': 'fastify -> @fastify/otel@0.0.0 - preValidation'
       })
@@ -521,10 +522,10 @@ describe('FastifyInstrumentation', () => {
 
       app.setNotFoundHandler(
         {
-          preHandler: function preHandler (request, reply, done) {
+          preHandler (request, reply, done) {
             done()
           },
-          preValidation: function preValidation (request, reply, done) {
+          preValidation (request, reply, done) {
             done()
           }
         },
@@ -593,7 +594,7 @@ describe('FastifyInstrumentation', () => {
         'hook.name': 'fastify -> @fastify/otel@0.0.0 - not-found-handler',
         'fastify.type': 'hook',
         'service.name': 'fastify',
-        'hook.callback.name': 'anonymous'
+        'hook.callback.name': 'notFoundHandler'
       })
       t.assert.equal(fof.parentSpanId, start.spanContext().spanId)
       t.assert.equal(preValidation.parentSpanId, start.spanContext().spanId)
@@ -680,7 +681,7 @@ describe('FastifyInstrumentation', () => {
         'hook.name': 'fastify -> @fastify/otel@0.0.0 - not-found-handler',
         'fastify.type': 'hook',
         'service.name': 'fastify',
-        'hook.callback.name': 'anonymous'
+        'hook.callback.name': 'notFoundHandler'
       })
       t.assert.equal(fof.parentSpanId, start.spanContext().spanId)
       t.assert.equal(preValidation.parentSpanId, start.spanContext().spanId)
