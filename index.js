@@ -66,7 +66,7 @@ class FastifyOtelInstrumentation extends InstrumentationBase {
 
     return fp(FastifyInstrumentationPlugin, {
       fastify: SUPPORTED_VERSIONS,
-      name: `@fastify/otel@${PACKAGE_VERSION}`
+      name: '@fastify/otel',
     })
 
     function FastifyInstrumentationPlugin (instance, opts, done) {

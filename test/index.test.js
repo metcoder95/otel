@@ -156,7 +156,7 @@ describe('FastifyInstrumentation', () => {
         'http.response.status_code': 200
       })
       t.assert.deepStrictEqual(end.attributes, {
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - route-handler',
+        'hook.name': 'fastify -> @fastify/otel - route-handler',
         'fastify.type': 'request-handler',
         'http.route': '/',
         'service.name': 'fastify',
@@ -200,7 +200,7 @@ describe('FastifyInstrumentation', () => {
         'http.response.status_code': 200
       })
       t.assert.deepStrictEqual(end.attributes, {
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - route-handler',
+        'hook.name': 'fastify -> @fastify/otel - route-handler',
         'fastify.type': 'request-handler',
         'http.route': '/',
         'service.name': 'fastify',
@@ -270,26 +270,26 @@ describe('FastifyInstrumentation', () => {
       t.assert.deepStrictEqual(onReq1.attributes, {
         'fastify.type': 'route-hook',
         'hook.callback.name': 'onRequest1',
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - route -> onRequest',
+        'hook.name': 'fastify -> @fastify/otel - route -> onRequest',
         'http.route': '/',
         'service.name': 'fastify',
       })
       t.assert.deepStrictEqual(onReq2.attributes, {
         'fastify.type': 'route-hook',
         'hook.callback.name': 'anonymous',
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - route -> onRequest',
+        'hook.name': 'fastify -> @fastify/otel - route -> onRequest',
         'http.route': '/',
         'service.name': 'fastify',
       })
       t.assert.deepStrictEqual(preHandler.attributes, {
         'fastify.type': 'route-hook',
         'hook.callback.name': 'preHandler',
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - route -> preHandler',
+        'hook.name': 'fastify -> @fastify/otel - route -> preHandler',
         'http.route': '/',
         'service.name': 'fastify',
       })
       t.assert.deepStrictEqual(end.attributes, {
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - route-handler',
+        'hook.name': 'fastify -> @fastify/otel - route-handler',
         'fastify.type': 'request-handler',
         'http.route': '/',
         'hook.callback.name': 'helloworld',
@@ -360,7 +360,7 @@ describe('FastifyInstrumentation', () => {
       t.assert.deepStrictEqual(onReq1.attributes, {
         'fastify.type': 'route-hook',
         'hook.callback.name': 'onSend',
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - route -> onSend',
+        'hook.name': 'fastify -> @fastify/otel - route -> onSend',
         'service.name': 'fastify',
         'http.route': '/'
       })
@@ -368,10 +368,10 @@ describe('FastifyInstrumentation', () => {
         'fastify.type': 'hook',
         'hook.callback.name': 'preValidation',
         'service.name': 'fastify',
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - preValidation'
+        'hook.name': 'fastify -> @fastify/otel - preValidation'
       })
       t.assert.deepStrictEqual(end.attributes, {
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - route-handler',
+        'hook.name': 'fastify -> @fastify/otel - route-handler',
         'fastify.type': 'request-handler',
         'http.route': '/',
         'service.name': 'fastify',
@@ -423,7 +423,7 @@ describe('FastifyInstrumentation', () => {
         'fastify.type': 'hook',
         'hook.callback.name': 'anonymous',
         'service.name': 'fastify',
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - preHandler'
+        'hook.name': 'fastify -> @fastify/otel - preHandler'
       })
       t.assert.equal(preHandler.status.code, SpanStatusCode.ERROR)
       t.assert.equal(preHandler.parentSpanId, start.spanContext().spanId)
@@ -507,7 +507,7 @@ describe('FastifyInstrumentation', () => {
         'http.response.status_code': 404
       })
       t.assert.deepStrictEqual(fof.attributes, {
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - not-found-handler',
+        'hook.name': 'fastify -> @fastify/otel - not-found-handler',
         'fastify.type': 'hook',
         'service.name': 'fastify',
         'hook.callback.name': 'notFoundHandler'
@@ -578,20 +578,20 @@ describe('FastifyInstrumentation', () => {
       })
       t.assert.deepStrictEqual(preHandler.attributes, {
         'hook.name':
-          'fastify -> @fastify/otel@0.0.0 - not-found-handler - preHandler',
+          'fastify -> @fastify/otel - not-found-handler - preHandler',
         'fastify.type': 'hook',
         'service.name': 'fastify',
         'hook.callback.name': 'preHandler'
       })
       t.assert.deepStrictEqual(preValidation.attributes, {
         'hook.name':
-          'fastify -> @fastify/otel@0.0.0 - not-found-handler - preValidation',
+          'fastify -> @fastify/otel - not-found-handler - preValidation',
         'fastify.type': 'hook',
         'service.name': 'fastify',
         'hook.callback.name': 'preValidation'
       })
       t.assert.deepStrictEqual(fof.attributes, {
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - not-found-handler',
+        'hook.name': 'fastify -> @fastify/otel - not-found-handler',
         'fastify.type': 'hook',
         'service.name': 'fastify',
         'hook.callback.name': 'notFoundHandler'
@@ -665,20 +665,20 @@ describe('FastifyInstrumentation', () => {
       })
       t.assert.deepStrictEqual(preHandler.attributes, {
         'hook.name':
-          'fastify -> @fastify/otel@0.0.0 - not-found-handler - preHandler',
+          'fastify -> @fastify/otel - not-found-handler - preHandler',
         'fastify.type': 'hook',
         'service.name': 'fastify',
         'hook.callback.name': 'preHandler'
       })
       t.assert.deepStrictEqual(preValidation.attributes, {
         'hook.name':
-          'fastify -> @fastify/otel@0.0.0 - not-found-handler - preValidation',
+          'fastify -> @fastify/otel - not-found-handler - preValidation',
         'fastify.type': 'hook',
         'service.name': 'fastify',
         'hook.callback.name': 'preValidation'
       })
       t.assert.deepStrictEqual(fof.attributes, {
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - not-found-handler',
+        'hook.name': 'fastify -> @fastify/otel - not-found-handler',
         'fastify.type': 'hook',
         'service.name': 'fastify',
         'hook.callback.name': 'notFoundHandler'
@@ -730,7 +730,7 @@ describe('FastifyInstrumentation', () => {
         'http.response.status_code': 500
       })
       t.assert.deepStrictEqual(end.attributes, {
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - route-handler',
+        'hook.name': 'fastify -> @fastify/otel - route-handler',
         'fastify.type': 'request-handler',
         'http.route': '/',
         'service.name': 'fastify',
@@ -792,12 +792,12 @@ describe('FastifyInstrumentation', () => {
       t.assert.deepStrictEqual(error.attributes, {
         'fastify.type': 'route-hook',
         'hook.callback.name': 'decorated',
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - route -> onError',
+        'hook.name': 'fastify -> @fastify/otel - route -> onError',
         'http.route': '/',
         'service.name': 'fastify',
       })
       t.assert.deepStrictEqual(end.attributes, {
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - route-handler',
+        'hook.name': 'fastify -> @fastify/otel - route-handler',
         'fastify.type': 'request-handler',
         'http.route': '/',
         'service.name': 'fastify',
@@ -864,19 +864,19 @@ describe('FastifyInstrumentation', () => {
       t.assert.deepStrictEqual(error.attributes, {
         'fastify.type': 'route-hook',
         'hook.callback.name': 'decorated',
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - route -> onError',
+        'hook.name': 'fastify -> @fastify/otel - route -> onError',
         'service.name': 'fastify',
         'http.route': '/'
       })
       t.assert.deepStrictEqual(error2.attributes, {
         'fastify.type': 'route-hook',
         'hook.callback.name': 'decorated2',
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - route -> onError',
+        'hook.name': 'fastify -> @fastify/otel - route -> onError',
         'service.name': 'fastify',
         'http.route': '/'
       })
       t.assert.deepStrictEqual(end.attributes, {
-        'hook.name': 'fastify -> @fastify/otel@0.0.0 - route-handler',
+        'hook.name': 'fastify -> @fastify/otel - route-handler',
         'fastify.type': 'request-handler',
         'http.route': '/',
         'service.name': 'fastify',
@@ -1032,7 +1032,7 @@ describe('FastifyInstrumentation', () => {
           'http.response.status_code': 200
         })
         t.assert.deepStrictEqual(end.attributes, {
-          'hook.name': 'nested -> @fastify/otel@0.0.0 - route-handler',
+          'hook.name': 'nested -> @fastify/otel - route-handler',
           'fastify.type': 'request-handler',
           'http.route': '/',
           'service.name': 'fastify',
@@ -1115,7 +1115,7 @@ describe('FastifyInstrumentation', () => {
           'fastify.type': 'hook',
           'hook.callback.name': 'anonymous',
           'service.name': 'fastify',
-          'hook.name': 'fastify -> @fastify/otel@0.0.0 - preValidation'
+          'hook.name': 'fastify -> @fastify/otel - preValidation'
         })
         t.assert.deepStrictEqual(end.attributes, {
           'hook.name': 'nested - route-handler',
