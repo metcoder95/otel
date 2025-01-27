@@ -9,15 +9,13 @@ const {
 } = require('@opentelemetry/semantic-conventions')
 const { InstrumentationBase } = require('@opentelemetry/instrumentation')
 
-const fp = require('fastify-plugin')
-
 const {
   version: PACKAGE_VERSION,
   name: PACKAGE_NAME
 } = require('./package.json')
 
 // Constants
-const SUPPORTED_VERSIONS = '>=5.0.0 <6'
+const SUPPORTED_VERSIONS = '>=4.0.0 <6'
 const FASTIFY_HOOKS = [
   'onRequest',
   'preParsing',
@@ -64,10 +62,14 @@ class FastifyOtelInstrumentation extends InstrumentationBase {
   plugin () {
     const instrumentation = this
 
-    return fp(FastifyInstrumentationPlugin, {
+    FastifyInstrumentationPlugin[Symbol.for('skip-override')] = true
+    FastifyInstrumentationPlugin[Symbol.for('fastify.display-name')] = '@fastify/otel'
+    FastifyInstrumentationPlugin[Symbol.for('plugin-meta')] = {
       fastify: SUPPORTED_VERSIONS,
       name: '@fastify/otel',
-    })
+    }
+
+    return FastifyInstrumentationPlugin
 
     function FastifyInstrumentationPlugin (instance, opts, done) {
       const addHookOriginal = instance.addHook.bind(instance)
