@@ -40,9 +40,11 @@ const HOOK_TYPES = {
 const ANONYMOUS_FUNCTION_NAME = 'anonymous'
 
 // Symbols
-const kInstrumentation = Symbol('fastify instrumentation instance')
-const kRequestSpan = Symbol('fastify instrumentation request spans')
-const kRequestContext = Symbol('fastify instrumentation request context')
+const kInstrumentation = Symbol('fastify otel instance')
+const kRequestSpan = Symbol('fastify otel request spans')
+const kRequestContext = Symbol('fastify otel request context')
+const kAddHookOriginal = Symbol('fastify otel addhook original')
+const kSetNotFoundOriginal = Symbol('fastify otel setnotfound original')
 
 class FastifyOtelInstrumentation extends InstrumentationBase {
   static FastifyOtelInstrumentation = FastifyOtelInstrumentation
@@ -72,11 +74,11 @@ class FastifyOtelInstrumentation extends InstrumentationBase {
     return FastifyInstrumentationPlugin
 
     function FastifyInstrumentationPlugin (instance, opts, done) {
-      const addHookOriginal = instance.addHook.bind(instance)
-      const setNotFoundHandlerOriginal =
-        instance.setNotFoundHandler.bind(instance)
-
       instance.decorate(kInstrumentation, instrumentation)
+      // addHook and notfoundHandler are essentially inherited from the prototype
+      // what is important is to bound it to the right instance
+      instance.decorate(kAddHookOriginal, instance.addHook)
+      instance.decorate(kSetNotFoundOriginal, instance.setNotFoundHandler)
       instance.decorateRequest(kRequestSpan, null)
       instance.decorateRequest(kRequestContext, null)
 
@@ -200,8 +202,8 @@ class FastifyOtelInstrumentation extends InstrumentationBase {
         hookDone()
       })
 
-      instance.addHook = addHookPatched.bind(instance)
-      instance.setNotFoundHandler = setNotFoundHandlerPatched.bind(instance)
+      instance.addHook = addHookPatched
+      instance.setNotFoundHandler = setNotFoundHandlerPatched
 
       done()
 
@@ -210,10 +212,13 @@ class FastifyOtelInstrumentation extends InstrumentationBase {
         const span = request[kRequestSpan]
 
         if (span != null) {
-          span.setStatus({
-            code: SpanStatusCode.OK,
-            message: 'OK'
-          })
+          if (reply.statusCode < 500) {
+            span.setStatus({
+              code: SpanStatusCode.OK,
+              message: 'OK'
+            })
+          }
+
           span.setAttributes({
             [ATTR_HTTP_RESPONSE_STATUS_CODE]: reply.statusCode
           })
@@ -241,12 +246,14 @@ class FastifyOtelInstrumentation extends InstrumentationBase {
       }
 
       function addHookPatched (name, hook) {
+        const addHookOriginal = this[kAddHookOriginal]
+
         if (FASTIFY_HOOKS.includes(name)) {
-          addHookOriginal(
+          addHookOriginal.call(
+            this,
             name,
             handlerWrapper(hook, {
-              [ATTR_SERVICE_NAME]:
-                instance[kInstrumentation].servername,
+              [ATTR_SERVICE_NAME]: instance[kInstrumentation].servername,
               [ATTRIBUTE_NAMES.HOOK_NAME]: `${this.pluginName} - ${name}`,
               [ATTRIBUTE_NAMES.FASTIFY_TYPE]: HOOK_TYPES.INSTANCE,
               [ATTRIBUTE_NAMES.HOOK_CALLBACK_NAME]:
@@ -256,11 +263,12 @@ class FastifyOtelInstrumentation extends InstrumentationBase {
             })
           )
         } else {
-          addHookOriginal(name, hook)
+          addHookOriginal.call(this, name, hook)
         }
       }
 
       function setNotFoundHandlerPatched (hooks, handler) {
+        const setNotFoundHandlerOriginal = this[kSetNotFoundOriginal]
         if (typeof hooks === 'function') {
           handler = handlerWrapper(hooks, {
             [ATTR_SERVICE_NAME]: instance[kInstrumentation].servername,
@@ -271,12 +279,11 @@ class FastifyOtelInstrumentation extends InstrumentationBase {
                 ? hooks.name
                 : ANONYMOUS_FUNCTION_NAME /* c8 ignore next */
           })
-          setNotFoundHandlerOriginal(handler)
+          setNotFoundHandlerOriginal.call(this, handler)
         } else {
           if (hooks.preValidation != null) {
             hooks.preValidation = handlerWrapper(hooks.preValidation, {
-              [ATTR_SERVICE_NAME]:
-                instance[kInstrumentation].servername,
+              [ATTR_SERVICE_NAME]: instance[kInstrumentation].servername,
               [ATTRIBUTE_NAMES.HOOK_NAME]: `${this.pluginName} - not-found-handler - preValidation`,
               [ATTRIBUTE_NAMES.FASTIFY_TYPE]: HOOK_TYPES.INSTANCE,
               [ATTRIBUTE_NAMES.HOOK_CALLBACK_NAME]:
@@ -308,7 +315,7 @@ class FastifyOtelInstrumentation extends InstrumentationBase {
                 ? handler.name
                 : ANONYMOUS_FUNCTION_NAME /* c8 ignore next */
           })
-          setNotFoundHandlerOriginal(hooks, handler)
+          setNotFoundHandlerOriginal.call(this, hooks, handler)
         }
       }
 
@@ -327,7 +334,7 @@ class FastifyOtelInstrumentation extends InstrumentationBase {
             `handler - ${
               handler.name?.length > 0
                 ? handler.name
-                : this.pluginName ?? /* c8 ignore next */
+                : this.pluginName /* c8 ignore next */ ??
                   ANONYMOUS_FUNCTION_NAME /* c8 ignore next */
             }`,
             {
