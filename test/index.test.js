@@ -1065,7 +1065,7 @@ describe('FastifyInstrumentation', () => {
           'fastify.type': 'hook',
           'hook.callback.name': 'anonymous',
           'service.name': 'fastify',
-          'hook.name': 'fastify -> @fastify/otel - preValidation'
+          'hook.name': 'nested - preValidation'
         })
         assert.deepStrictEqual(end.attributes, {
           'hook.name': 'nested - route-handler',
@@ -1077,6 +1077,154 @@ describe('FastifyInstrumentation', () => {
         assert.equal(end.parentSpanId, start.spanContext().spanId)
         assert.equal(response.status, 200)
         assert.equal(await response.text(), 'hello world')
+      })
+
+      test('should respect context (error scenario)', async t => {
+        const app = Fastify()
+        const plugin = instrumentation.plugin()
+
+        await app.register(async function nested (instance, _opts) {
+          await instance.register(plugin)
+          instance.get('/', async function helloworld () {
+            return 'hello world'
+          })
+        })
+
+        // If registered under encapsulated context, hooks should be registered
+        // under the encapsulated context
+        app.addHook('preHandler', function (request, reply, done) {
+          throw new Error('error')
+        })
+
+        await app.listen()
+
+        after(() => app.close())
+
+        const response = await fetch(
+          `http://localhost:${app.server.address().port}/`
+        )
+
+        const spans = memoryExporter
+          .getFinishedSpans()
+          .filter(span => span.instrumentationLibrary.name === '@fastify/otel')
+
+        const [start] = spans
+
+        assert.equal(spans.length, 1)
+        assert.deepStrictEqual(start.attributes, {
+          'fastify.root': '@fastify/otel',
+          'http.route': '/',
+          'http.request.method': 'GET',
+          'service.name': 'fastify',
+          'http.response.status_code': 500
+        })
+        assert.equal(response.status, 500)
+      })
+
+      test('#12 - should respect nested context', async t => {
+        const app = Fastify()
+        const plugin = instrumentation.plugin()
+
+        await app.register(plugin)
+
+        app.register(function nested (instance, _opts, done) {
+          instance.get('/', async function helloworld () {
+            return 'hello world'
+          })
+
+          instance.addHook('preValidation', function (request, reply, done) {
+            done()
+          })
+
+          instance.register(
+            function nested2 (nestedinstance2, _opts, done) {
+              nestedinstance2.addHook(
+                'preHandler',
+                function (request, reply, done) {
+                  // eslint-disable-next-line no-throw-literal
+                  throw { statusCode: 500, message: 'error' }
+                }
+              )
+
+              nestedinstance2.get('/', () => 'helloworld')
+
+              done()
+            },
+            { prefix: '/nested2' }
+          )
+
+          // Should not be patched
+          instance.addHook('onReady', function (done) {
+            done()
+          })
+
+          done()
+        })
+
+        await app.listen()
+
+        after(() => app.close())
+
+        const response = await fetch(
+          `http://localhost:${app.server.address().port}/`
+        )
+        const response2 = await fetch(
+          `http://localhost:${app.server.address().port}/nested2`
+        )
+
+        const spans = memoryExporter
+          .getFinishedSpans()
+          .filter(span => span.instrumentationLibrary.name === '@fastify/otel')
+
+        const [preValidation, start, end, preHandler2, end2, preValidation2] =
+          spans
+
+        assert.equal(spans.length, 6)
+        assert.deepStrictEqual(preValidation.attributes, {
+          'fastify.type': 'hook',
+          'hook.callback.name': 'anonymous',
+          'service.name': 'fastify',
+          'hook.name': 'nested - preValidation'
+        })
+        assert.deepStrictEqual(end.attributes, {
+          'fastify.root': '@fastify/otel',
+          'http.route': '/',
+          'http.request.method': 'GET',
+          'service.name': 'fastify',
+          'http.response.status_code': 200
+        })
+        assert.deepStrictEqual(start.attributes, {
+          'hook.name': 'nested - route-handler',
+          'fastify.type': 'request-handler',
+          'http.route': '/',
+          'service.name': 'fastify',
+          'hook.callback.name': 'helloworld'
+        })
+        assert.deepStrictEqual(preHandler2.attributes, {
+          'service.name': 'fastify',
+          'hook.name': 'nested2 - preHandler',
+          'fastify.type': 'hook',
+          'hook.callback.name': 'anonymous'
+        })
+        assert.deepStrictEqual(end2.attributes, {
+          'service.name': 'fastify',
+          'fastify.root': '@fastify/otel',
+          'http.route': '/nested2',
+          'http.request.method': 'GET',
+          'http.response.status_code': 500
+        })
+        assert.deepStrictEqual(preValidation2.attributes, {
+          'service.name': 'fastify',
+          'hook.name': 'nested - preValidation',
+          'fastify.type': 'hook',
+          'hook.callback.name': 'anonymous'
+        })
+
+        assert.equal(start.parentSpanId, end.spanContext().spanId)
+        assert.equal(response.status, 200)
+        assert.equal(await response.text(), 'hello world')
+        assert.equal(response2.status, 500)
+        assert.deepStrictEqual(await response2.json(), { message: 'error', statusCode: 500 })
       })
 
       test('should respect context (error scenario)', async t => {
