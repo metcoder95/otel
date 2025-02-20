@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.4.0](https://github.com/fastify/otel/compare/v0.3.0...v0.4.0) (2025-02-20)
+
+
+### Features
+
+* auto register([#22](https://github.com/fastify/otel/issues/22)) ([896ba63](https://github.com/fastify/otel/commit/896ba63d28f7c5d228353bd143b0467b6655deb9))
+
 ## 0.1.0 (2025-01-10)
 
 
